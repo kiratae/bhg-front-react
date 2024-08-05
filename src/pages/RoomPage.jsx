@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "flowbite-react";
+import * as signalR from "@microsoft/signalr";
 
 const RoomPage = () => {
   const { roomId } = useParams();
@@ -8,6 +9,7 @@ const RoomPage = () => {
   const [userInfo, setUserInfo] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedCards, setSelectedCards] = useState([]);
+  const [ connection, setConnection ] = useState(null);
   const limitEvidenceCardSelect = 1;
   const limitFakeEvidenceCardSelect = 2;
 
@@ -189,6 +191,39 @@ const RoomPage = () => {
       roomInfo.players.find((player) => player.username === username)
     );
   }, [username]);
+
+  useEffect(() => {
+    const newConnection = new signalR.HubConnectionBuilder()
+        .withUrl(`${process.env.REACT_APP_API_END_POINT}/game/${roomId}`, {
+          headers: {
+            "X-API-Key": process.env.REACT_APP_API_KEY
+          }
+        })
+        .withAutomaticReconnect()
+        .build();
+
+    setConnection(newConnection);
+  }, []);
+
+  useEffect(() => {
+    if (connection) {
+      connection.start()
+        .then(result => {
+            console.log('Connected!');
+
+            connection.on('RoomSend', message => {
+              console.log(message);
+            });
+
+            connection.on('RoomSendData', (roomData) => {
+              console.log({ roomData });
+            });
+
+            connection.send('SetUserName', username);
+        })
+        .catch(e => console.log('Connection failed: ', e));
+    }
+  }, [connection]);
 
   const getAlivePlayers = () => {
     return roomInfo.players.filter(
