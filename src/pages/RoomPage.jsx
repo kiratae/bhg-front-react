@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "flowbite-react";
-import * as signalR from "@microsoft/signalr";
+import hubConnection from "../services/myHub";
+import myAxios from '../services/myAxios';
 
 const roleName = {
   0: "Unknown",
@@ -10,205 +11,43 @@ const roleName = {
   3: "Jarvis",
 };
 
-const roomInfo = {
-  roomId: "abc-def-ghi",
-  roomStatus: 8,
-  turn: 1,
-  playerQty: 5,
-  players: [
-    {
-      username: "Stericano",
-      userStatus: 3,
-      userRole: 1,
-    },
-    {
-      username: "Earthery",
-      userStatus: 1,
-      userRole: 1,
-    },
-    {
-      username: "Jutha",
-      userStatus: 1,
-      userRole: 1,
-    },
-    {
-      username: "TakTTK",
-      userStatus: 1,
-      userRole: 1,
-    },
-    {
-      username: "Kiratae",
-      userStatus: 1,
-      userRole: 1,
-    },
-  ],
-  cards: {
-    1: [
-      {
-        cardId: "c-001",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 1,
-        isFake: false,
-      },
-      {
-        cardId: "c-002",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 2,
-        isFake: false,
-      },
-      {
-        cardId: "c-003",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 2,
-        isFake: false,
-      },
-      {
-        cardId: "c-004",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-      {
-        cardId: "c-005",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-      {
-        cardId: "c-006",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-      {
-        cardId: "c-007",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-      {
-        cardId: "c-008",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-      {
-        cardId: "c-009",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-    ],
-    2: [
-      {
-        cardId: "c-001",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-      {
-        cardId: "c-002",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-      {
-        cardId: "c-003",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-      {
-        cardId: "c-004",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-      {
-        cardId: "c-005",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-      {
-        cardId: "c-006",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-      {
-        cardId: "c-007",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-      {
-        cardId: "c-008",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-      {
-        cardId: "c-009",
-        cardImagePath:
-          "https://m.media-amazon.com/images/I/41e6nX69fRL.__AC_SX300_SY300_QL70_FMwebp_.jpg",
-        cardStatus: 0,
-        isFake: false,
-      },
-    ],
-  },
-};
-
 const RoomPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { roomId } = useParams();
-  const username = "Stericano";
+  const username = location?.state?.playerName;
+  const [roomInfo, setRoomInfo] = useState(null);
   const [userInfo, setUserInfo] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedCards, setSelectedCards] = useState([]);
-  const [connection, setConnection] = useState(null);
+  const [connection] = useState(hubConnection(roomId));
   const limitEvidenceCardSelect = 1;
   const limitFakeEvidenceCardSelect = 2;
 
-  useEffect(() => {
-    setUserInfo(
-      roomInfo.players.find((player) => player.username === username)
-    );
+  const updateRoomInfo = useCallback((roomData) => {
+    const player = roomData.players.find((player) => player.userName === username);
+    setRoomInfo(roomData);
+    setUserInfo(player);
   }, [username]);
 
   useEffect(() => {
-    const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${process.env.REACT_APP_API_END_POINT}/game/${roomId}`, {
-        headers: {
-          "X-API-Key": process.env.REACT_APP_API_KEY
+    myAxios.get(`/api/rooms/${roomId}`)
+      .then((response) => {
+        if (response.data && response.data.data) {
+          const roomData = response.data.data;
+          updateRoomInfo(roomData);
         }
-      })
-      .withAutomaticReconnect()
-      .build();
-
-    setConnection(newConnection);
-  }, [roomId]);
+      }).catch((error) => {
+        if (error.response.status === 404) {
+          navigate('/');
+        }
+      });
+  }, [roomId, navigate, updateRoomInfo]);
 
   useEffect(() => {
-    if (connection) {
+    if (connection && !(connection.state === 'Connected' || connection.state === 'Connecting')) {
       connection.start()
-        .then(result => {
+        .then(() => {
           console.log('Connected!');
 
           connection.on('RoomSend', message => {
@@ -216,14 +55,21 @@ const RoomPage = () => {
           });
 
           connection.on('RoomSendData', (roomData) => {
-            console.log({ roomData });
+            console.log('RoomSendData', { roomData });
+            updateRoomInfo(roomData);
           });
 
-          connection.send('SetUserName', username);
+          connection.on('RoomJoined', (roomData) => {
+            console.log('RoomJoined', { roomData });
+            updateRoomInfo(roomData);
+          })
+
+          if (username)
+            connection.send('SetUserName', username);
         })
         .catch(e => console.log('Connection failed: ', e));
     }
-  }, [connection]);
+  }, [connection, username, updateRoomInfo]);
 
   const getAlivePlayers = () => {
     return roomInfo.players.filter(
@@ -297,25 +143,25 @@ const RoomPage = () => {
       <h2 className="text-xl">Room: {roomId}</h2>
 
       {/* Waiting State */}
-      {roomInfo.roomStatus === 1 && (
+      {roomInfo && roomInfo.gameStateId === 1 && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">Players:</h3>
           {roomInfo.players.map((player, index) => (
             <div key={index} className="text-center">
-              {player.username}
+              {player.isHost ? '👑 ' : '🟢 '}{player.userName}
             </div>
           ))}
-          <Button className="w-1/3 bg-gray-500 hover:bg-gray-700 text-white">
+          <Button color="light" className="w-1/3">
             Setup
           </Button>
-          <Button className="w-1/3 bg-blue-500 hover:bg-blue-700 text-white">
+          <Button color="primary" className="w-1/3">
             Start Game
           </Button>
         </div>
       )}
 
       {/* Protector Turn State */}
-      {roomInfo.roomStatus === 3 && (
+      {roomInfo && roomInfo.roomStatus === 3 && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
             You're <b>{roleName[userInfo.userRole]}</b>
@@ -334,8 +180,8 @@ const RoomPage = () => {
                 <Button
                   key={index}
                   className={`w-1/3 ${selectedPlayer?.username === player.username
-                      ? "border-blue-500 text-blue-500"
-                      : "border-grey-500 text-grey-500"
+                    ? "border-blue-500 text-blue-500"
+                    : "border-grey-500 text-grey-500"
                     }`}
                   onClick={() => handlePlayerClick(player)}
                 >
@@ -344,8 +190,8 @@ const RoomPage = () => {
               ))}
               <Button
                 className={`w-1/3 mt-4 ${selectedPlayer
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-500 text-white"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-500 text-white"
                   }`}
                 onClick={handleConfirmProtect}
                 disabled={!selectedPlayer}
@@ -358,7 +204,7 @@ const RoomPage = () => {
       )}
 
       {/* Killer State */}
-      {roomInfo.roomStatus === 4 && (
+      {roomInfo && roomInfo.roomStatus === 4 && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
             You're <b>{roleName[userInfo.userRole]}</b>
@@ -377,8 +223,8 @@ const RoomPage = () => {
                 <Button
                   key={index}
                   className={`w-1/3 ${selectedPlayer?.username === player.username
-                      ? "border-blue-500 text-blue-500"
-                      : "border-grey-500 text-grey-500"
+                    ? "border-blue-500 text-blue-500"
+                    : "border-grey-500 text-grey-500"
                     }`}
                   onClick={() => handlePlayerClick(player)}
                 >
@@ -387,8 +233,8 @@ const RoomPage = () => {
               ))}
               <Button
                 className={`w-1/3 mt-4 ${selectedPlayer
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-500 text-white"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-500 text-white"
                   }`}
                 onClick={handleConfirmKill}
                 disabled={!selectedPlayer}
@@ -400,7 +246,7 @@ const RoomPage = () => {
         </div>
       )}
 
-      {roomInfo.roomStatus === 5 && (
+      {roomInfo && roomInfo.roomStatus === 5 && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
             You're <b>{roleName[userInfo.userRole]}</b>
@@ -423,8 +269,8 @@ const RoomPage = () => {
                   <div
                     key={card.cardId}
                     className={`cursor-pointer rounded-lg ${selectedCards.includes(card.cardId)
-                        ? "border-red-500 border-4"
-                        : "border-gray-500 border-2"
+                      ? "border-red-500 border-4"
+                      : "border-gray-500 border-2"
                       }`} // Conditional border width
                     onClick={() => handleEvidenceCardClick(card.cardId)}
                     style={{ width: "80px", height: "130px" }} // Card size
@@ -443,8 +289,8 @@ const RoomPage = () => {
 
           <Button
             className={`w-1/3 mt-4 ${selectedCards.length > 0
-                ? "bg-blue-500 text-white"
-                : "bg-gray-500 text-white"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-500 text-white"
               }`}
             onClick={handleConfirmChooseEvidence}
             disabled={selectedCards.length === 0}
@@ -454,7 +300,7 @@ const RoomPage = () => {
         </div>
       )}
 
-      {roomInfo.roomStatus === 6 && (
+      {roomInfo && roomInfo.roomStatus === 6 && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
             You're <b>{roleName[userInfo.userRole]}</b>
@@ -493,8 +339,8 @@ const RoomPage = () => {
                       <div
                         key={card.cardId}
                         className={`cursor-pointer rounded-lg ${selectedCards.includes(card.cardId)
-                            ? "border-purple-500 border-4"
-                            : "border-gray-500 border-2"
+                          ? "border-purple-500 border-4"
+                          : "border-gray-500 border-2"
                           }`}
                         onClick={() => {
                           if (card.cardStatus !== 1) {
@@ -516,8 +362,8 @@ const RoomPage = () => {
               </div>
               <Button
                 className={`w-1/3 mt-4 ${selectedCards.length > 0
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-500 text-white"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-500 text-white"
                   }`}
                 onClick={handleConfirmChooseEvidence}
                 disabled={selectedCards.length === 0}
@@ -529,7 +375,7 @@ const RoomPage = () => {
         </div>
       )}
 
-      {roomInfo.roomStatus === 7 && (
+      {roomInfo && roomInfo.roomStatus === 7 && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
             You're <b>{roleName[userInfo.userRole]}</b>
@@ -562,8 +408,8 @@ const RoomPage = () => {
                   <Button
                     key={index}
                     className={`w-1/3 ${selectedPlayer?.username === player.username
-                        ? "border-blue-500 text-blue-500"
-                        : "border-grey-500 text-grey-500"
+                      ? "border-blue-500 text-blue-500"
+                      : "border-grey-500 text-grey-500"
                       }`}
                     onClick={() => handlePlayerClick(player)}
                   >
@@ -572,8 +418,8 @@ const RoomPage = () => {
                 ))}
                 <Button
                   className={`w-1/3 mt-4 ${selectedPlayer
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-500 text-white"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-500 text-white"
                     }`}
                   onClick={handleConfirmKill}
                   disabled={!selectedPlayer}
@@ -586,7 +432,7 @@ const RoomPage = () => {
         </div>
       )}
 
-      {roomInfo.roomStatus === 8 && (
+      {roomInfo && roomInfo.roomStatus === 8 && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
             You're <b>{roleName[userInfo.userRole]}</b>

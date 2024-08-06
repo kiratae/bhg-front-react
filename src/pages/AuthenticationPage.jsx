@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, TextInput, Label, Modal } from 'flowbite-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import myAxios from '../services/myAxios';
 
 const AuthenticationPage = () => {
   const navigate = useNavigate();
@@ -12,27 +12,21 @@ const AuthenticationPage = () => {
 
   const handleCreateRoom = () => {
     // Logic for creating a room can be added here
-    axios.post(`${process.env.REACT_APP_API_END_POINT}/api/rooms`,
-      { userName: playerName },
-      {
-        headers: { "X-API-Key": process.env.REACT_APP_API_KEY }
-      }).then((response) => {
+    myAxios.post('/api/rooms', { userName: playerName })
+      .then((response) => {
         if (response.data && response.data.data) {
           let roomData = response.data.data;
-          navigate(`/room/${roomData.roomCode}`);
+          navigate(`/room/${roomData.roomCode}`, { state: { playerName: playerName } });
         }
       });
   };
 
   const handleJoinRoom = () => {
-    axios.post(`${process.env.REACT_APP_API_END_POINT}/api/rooms/${roomCode}/join`,
-      { userName: playerName },
-      {
-        headers: { "X-API-Key": process.env.REACT_APP_API_KEY }
-      }).then((response) => {
+    myAxios.post(`/api/rooms/${roomCode}/join`, { userName: playerName })
+      .then((response) => {
         if (response.data && response.data.data) {
           let roomData = response.data.data;
-          navigate(`/room/${roomData.roomCode}`);
+          navigate(`/room/${roomData.roomCode}`, { state: { playerName: playerName } });
         }
       });
   };
