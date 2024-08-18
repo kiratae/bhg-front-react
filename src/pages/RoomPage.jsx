@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "flowbite-react";
-import hubConnection from "../services/myHub";
-import myAxios from '../services/myAxios';
+import hubConnection from "../scripts/myHub";
+import myAxios from '../scripts/myAxios';
+import PlayerStatus from "../models/PlayerStatus";
+import DMGameAction from "../models/DMGameAction";
+import GameState from "../models/GameState";
 
 const roleName = {
   0: "Unknown",
@@ -40,6 +43,8 @@ const RoomPage = () => {
       }).catch((error) => {
         if (error.response.status === 404) {
           navigate('/');
+        } else {
+          console.error(error);
         }
       });
   }, [roomId, navigate, updateRoomInfo]);
@@ -54,8 +59,8 @@ const RoomPage = () => {
             console.log(message);
           });
 
-          connection.on('RoomSendData', (roomData) => {
-            console.log('RoomSendData', { roomData });
+          connection.on('RoomDataSend', (roomData) => {
+            console.log('RoomDataSend', { roomData });
             updateRoomInfo(roomData);
           });
 
@@ -73,12 +78,32 @@ const RoomPage = () => {
 
   const getAlivePlayers = () => {
     return roomInfo.players.filter(
-      (player) => player.userStatus === 1 && player.username !== username
+      (player) => player.statusId === PlayerStatus.Alive && player.userName !== username
     );
   };
 
   const getSelectedCards = () => {
     return roomInfo.cards[roomInfo.turn].filter((card) => card.cardStatus > 0);
+  };
+
+  const handleStartGame = () => {
+    myAxios.post(`/api/dm-game-control/${roomId}`,
+      {
+        acionTypeId: DMGameAction.StartGame,
+        userName: username
+      })
+      .then((response) => {
+        if (response.data && response.data.data) {
+          const roomData = response.data.data;
+          updateRoomInfo(roomData);
+        }
+      }).catch((error) => {
+        if (error.response.status === 404) {
+          navigate('/');
+        } else {
+          console.error(error);
+        }
+      });
   };
 
   const handlePlayerClick = (player) => {
@@ -87,20 +112,77 @@ const RoomPage = () => {
 
   const handleConfirmKill = () => {
     if (selectedPlayer) {
-      console.log(`Player ${selectedPlayer.username} selected for kill`);
-      // Implement your kill logic here
+      console.log(`Player ${selectedPlayer.userName} selected for kill`);
+      myAxios.post(`/api/dm-game-control/${roomId}`,
+        {
+          acionTypeId: DMGameAction.KillerChooseTarget,
+          userName: username,
+          targetUserName: selectedPlayer.userName
+        })
+        .then((response) => {
+          if (response.data && response.data.data) {
+            const roomData = response.data.data;
+            updateRoomInfo(roomData);
+            setSelectedPlayer(null);
+          }
+        }).catch((error) => {
+          if (error.response.status === 404) {
+            navigate('/');
+          } else {
+            console.error(error);
+          }
+        });
     }
   };
 
   const handleConfirmProtect = () => {
     if (selectedPlayer) {
-      console.log(`Player ${selectedPlayer.username} selected for kill`);
-      // Implement your kill logic here
+      console.log(`Player ${selectedPlayer.userName} selected for kill`);
+      myAxios.post(`/api/dm-game-control/${roomId}`,
+        {
+          acionTypeId: DMGameAction.DogJarvisChooseTarget,
+          userName: username,
+          targetUserName: selectedPlayer.userName
+        })
+        .then((response) => {
+          if (response.data && response.data.data) {
+            const roomData = response.data.data;
+            updateRoomInfo(roomData);
+            setSelectedPlayer(null);
+          }
+        }).catch((error) => {
+          if (error.response.status === 404) {
+            navigate('/');
+          } else {
+            console.error(error);
+          }
+        });
     }
   };
 
   const handleConfirmChooseEvidence = () => {
-    console.log(`Player ${selectedPlayer.username} selected for kill`);
+    if (selectedCards.length > 0) {
+      console.log(`Player ${username} is picked evidence.`);
+      myAxios.post(`/api/dm-game-control/${roomId}`,
+        {
+          acionTypeId: DMGameAction.DeadChooseEvidence,
+          userName: username,
+          targetCardIds: selectedCards
+        })
+        .then((response) => {
+          if (response.data && response.data.data) {
+            const roomData = response.data.data;
+            updateRoomInfo(roomData);
+            setSelectedCards([]);
+          }
+        }).catch((error) => {
+          if (error.response.status === 404) {
+            navigate('/');
+          } else {
+            console.error(error);
+          }
+        });
+    }
   };
 
   const handleEvidenceCardClick = (cardId) => {
@@ -142,26 +224,46 @@ const RoomPage = () => {
       <h1 className="text-2xl font-bold">Dying Message</h1>
       <h2 className="text-xl">Room: {roomId}</h2>
 
+      {roomInfo && roomInfo.gameStateId === GameState.Start && (
+        <>
+          <div className="flex flex-col items-center justify-center w-full space-y-4">
+            <h2 className="text-lg">Game is starting...</h2>
+          </div>
+          <div className="flex flex-col items-center justify-center w-full space-y-4">
+            <h3 className="text-lg">Players:</h3>
+            {roomInfo.players.map((player, index) => (
+              <div key={index} className={`text-center ${player.userName === username ? 'font-bold' : ''}`}>
+                {player.isHost ? '👑 ' : '🟢 '}{player.userName}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
       {/* Waiting State */}
-      {roomInfo && roomInfo.gameStateId === 1 && (
+      {roomInfo && roomInfo.gameStateId === GameState.Waiting && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">Players:</h3>
           {roomInfo.players.map((player, index) => (
-            <div key={index} className="text-center">
+            <div key={index} className={`text-center ${player.userName === username ? 'font-bold' : ''}`}>
               {player.isHost ? '👑 ' : '🟢 '}{player.userName}
             </div>
           ))}
-          <Button color="light" className="w-1/3">
-            Setup
-          </Button>
-          <Button color="primary" className="w-1/3">
-            Start Game
-          </Button>
+          {userInfo.isHost && (
+            <>
+              <Button color="light" className="w-1/3">
+                Setup
+              </Button>
+              <Button color="primary" className="w-1/3" onClick={handleStartGame}>
+                Start Game
+              </Button>
+            </>
+          )}
         </div>
       )}
 
       {/* Protector Turn State */}
-      {roomInfo && roomInfo.roomStatus === 3 && (
+      {roomInfo && roomInfo.gameStateId === GameState.ProtectorTurn && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
             You're <b>{roleName[userInfo.userRole]}</b>
@@ -204,17 +306,17 @@ const RoomPage = () => {
       )}
 
       {/* Killer State */}
-      {roomInfo && roomInfo.roomStatus === 4 && (
+      {roomInfo && roomInfo.gameStateId === GameState.KillerTurn && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
-            You're <b>{roleName[userInfo.userRole]}</b>
+            You're <b>{roleName[userInfo.roleId]}</b>
           </h3>
-          {userInfo.userRole !== 2 && (
+          {userInfo.roleId !== 2 && (
             <div className="flex flex-col items-center justify-center w-full space-y-4">
               <h2 className="text-lg">Waiting for Killer Player</h2>
             </div>
           )}
-          {userInfo.userRole === 2 && userInfo.userStatus === 1 && (
+          {userInfo.roleId === 2 && userInfo.statusId === 1 && (
             <div className="flex flex-col items-center justify-center w-full space-y-4">
               <h2 className="text-lg">
                 <b>Choose Player to Kill</b>
@@ -222,20 +324,19 @@ const RoomPage = () => {
               {getAlivePlayers().map((player, index) => (
                 <Button
                   key={index}
-                  className={`w-1/3 ${selectedPlayer?.username === player.username
-                    ? "border-blue-500 text-blue-500"
-                    : "border-grey-500 text-grey-500"
+                  color="light"
+                  className={`w-1/3 ${selectedPlayer?.userName === player.userName
+                    ? "border-red-500 text-red-500 font-bold border-2"
+                    : ""
                     }`}
                   onClick={() => handlePlayerClick(player)}
                 >
-                  {player.username}
+                  {selectedPlayer?.userName === player.userName ? '🔪 ' : ''}{player.userName}
                 </Button>
               ))}
               <Button
-                className={`w-1/3 mt-4 ${selectedPlayer
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-500 text-white"
-                  }`}
+                color="primary"
+                className="w-1/3 mt-4"
                 onClick={handleConfirmKill}
                 disabled={!selectedPlayer}
               >
@@ -246,17 +347,17 @@ const RoomPage = () => {
         </div>
       )}
 
-      {roomInfo && roomInfo.roomStatus === 5 && (
+      {roomInfo && roomInfo.gameStateId === GameState.LeaveDyingMessageTime && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
-            You're <b>{roleName[userInfo.userRole]}</b>
+            You're <b>{roleName[userInfo.roleId]}</b>
           </h3>
-          {userInfo.userStatus !== 3 && (
+          {userInfo.statusId !== PlayerStatus.Dying && (
             <div className="flex flex-col items-center justify-center w-full space-y-4">
               <h2 className="text-lg">Waiting for Evidence</h2>
             </div>
           )}
-          {userInfo.userStatus === 3 && (
+          {userInfo.statusId === PlayerStatus.Dying && (
             <div className="flex flex-col items-center justify-center w-full space-y-4">
               <h3 className="text-lg">
                 You're <b>Die!</b>
@@ -265,7 +366,7 @@ const RoomPage = () => {
                 <b>Choose the Evidence</b>
               </h2>
               <div className="grid grid-cols-3 gap-4">
-                {roomInfo.cards[roomInfo.turn].map((card) => (
+                {roomInfo.cards[roomInfo.gameRound].map((card) => (
                   <div
                     key={card.cardId}
                     className={`cursor-pointer rounded-lg ${selectedCards.includes(card.cardId)
@@ -276,7 +377,7 @@ const RoomPage = () => {
                     style={{ width: "80px", height: "130px" }} // Card size
                   >
                     <img
-                      src={card.cardImagePath}
+                      src={`${process.env.REACT_APP_API_END_POINT}${card.fileName.replace('~/', '/')}`}
                       alt={`Card ${card.cardId}`}
                       className="w-full h-full object-cover rounded-lg"
                       style={{ width: "80px", height: "120px" }} // Image size
@@ -288,10 +389,8 @@ const RoomPage = () => {
           )}
 
           <Button
-            className={`w-1/3 mt-4 ${selectedCards.length > 0
-              ? "bg-blue-500 text-white"
-              : "bg-gray-500 text-white"
-              }`}
+            color="primary"
+            className="w-1/3 mt-4"
             onClick={handleConfirmChooseEvidence}
             disabled={selectedCards.length === 0}
           >
@@ -300,20 +399,20 @@ const RoomPage = () => {
         </div>
       )}
 
-      {roomInfo && roomInfo.roomStatus === 6 && (
+      {roomInfo && roomInfo.gameStateId === GameState.LeaveFakeEvidenceTime && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
-            You're <b>{roleName[userInfo.userRole]}</b>
+            You're <b>{roleName[userInfo.roleId]}</b>
           </h3>
 
-          {userInfo.userRole !== 2 && (
+          {userInfo.roleId !== 2 && (
             <div className="flex flex-col items-center justify-center w-full space-y-4">
               <h2 className="text-lg">
                 Waiting for Killer Choose Fake Evidence
               </h2>
             </div>
           )}
-          {userInfo.userRole === 2 && (
+          {userInfo.roleId === 2 && (
             <div className="flex flex-col items-center justify-center w-full space-y-4">
               <h2 className="text-lg">
                 <b>Choose Two Fake Evidence</b>
@@ -375,7 +474,7 @@ const RoomPage = () => {
         </div>
       )}
 
-      {roomInfo && roomInfo.roomStatus === 7 && (
+      {roomInfo && roomInfo.gameStateId === GameState.DiscussTime && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
             You're <b>{roleName[userInfo.userRole]}</b>
@@ -432,7 +531,7 @@ const RoomPage = () => {
         </div>
       )}
 
-      {roomInfo && roomInfo.roomStatus === 8 && (
+      {roomInfo && roomInfo.gameStateId === GameState.VoteOutTime && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
             You're <b>{roleName[userInfo.userRole]}</b>
@@ -485,6 +584,14 @@ const RoomPage = () => {
               <h2 className="text-lg">Waiting for the Judgment</h2>
             </div>
           )}
+        </div>
+      )}
+
+      {roomInfo && roomInfo.gameStateId === GameState.GameOver && (
+        <div className="flex flex-col items-center justify-center w-full space-y-4">
+          <h3 className="text-lg">
+            Game over
+          </h3>
         </div>
       )}
     </div>

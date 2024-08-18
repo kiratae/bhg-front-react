@@ -1,7 +1,8 @@
 import React from 'react';
 import { Button, TextInput, Label, Modal } from 'flowbite-react';
 import { useNavigate } from 'react-router-dom';
-import myAxios from '../services/myAxios';
+import myAxios from '../scripts/myAxios';
+import { strIsNullOrWhitespace } from '../scripts/utils';
 
 const AuthenticationPage = () => {
   const navigate = useNavigate();
@@ -53,19 +54,13 @@ const AuthenticationPage = () => {
     <>
       <div className="flex flex-col items-center justify-center h-screen space-y-4">
         <h1 className="text-2xl font-bold">Dying Message</h1>
-        {/* <TextInput
-          placeholder="Player Name"
-          value={playerName}
-          onChange={(e) => setPlayerName(e.target.value)}
-          className="w-1/3"
-        /> */}
         <TextInput
           placeholder="Room Code"
           value={roomCode}
           onChange={(e) => setRoomCode(e.target.value)}
           className="w-1/3"
         />
-        <Button color="primary" onClick={onJoinRoom} className="w-1/3">
+        <Button color="primary" onClick={onJoinRoom} className="w-1/3" disabled={strIsNullOrWhitespace(roomCode)}>
           Join Room
         </Button>
         <div></div>
@@ -76,13 +71,12 @@ const AuthenticationPage = () => {
       <Modal show={openModal} position="center" size="sm" onClose={() => setOpenModal(false)}>
         <Modal.Header>{isCreateRoom ? 'Create room' : 'Join room'}</Modal.Header>
         <Modal.Body>
-          <h3 className="text-xl font-medium text-gray-900 dark:text-white">Give me some name</h3>
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="text" value="Your name" />
+              <Label htmlFor="text" value="Player name" />
             </div>
             <TextInput
-              placeholder="Player Name"
+              placeholder="Player name"
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
               required
@@ -93,7 +87,7 @@ const AuthenticationPage = () => {
           <Button color="light" onClick={() => setOpenModal(false)}>
             Cancel
           </Button>
-          <Button color={isCreateRoom ? 'secondary' : 'primary'} onClick={onConfirmModal}>{isCreateRoom ? 'Create room' : 'Join room'}</Button>
+          <Button color={isCreateRoom ? 'secondary' : 'primary'} onClick={onConfirmModal} disabled={strIsNullOrWhitespace(playerName)}>{isCreateRoom ? 'Create room' : 'Join room'}</Button>
         </Modal.Footer>
       </Modal>
     </>
