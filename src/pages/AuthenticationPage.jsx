@@ -1,15 +1,18 @@
 import React from 'react';
 import { Button, TextInput, Label, Modal } from 'flowbite-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import myAxios from '../scripts/myAxios';
 import { strIsNullOrWhitespace } from '../scripts/utils';
 
 const AuthenticationPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const roomId = location?.state?.roomId || null;
   const [playerName, setPlayerName] = React.useState('');
-  const [roomCode, setRoomCode] = React.useState('');
-  const [openModal, setOpenModal] = React.useState(false);
+  const [roomCode, setRoomCode] = React.useState(roomId != null ? roomId : '');
+  const [openModal, setOpenModal] = React.useState(roomId != null);
   const [isCreateRoom, setIsCreateRoom] = React.useState(false);
+  const playerNameInputRef = React.useRef(null);
 
   const handleCreateRoom = () => {
     // Logic for creating a room can be added here
@@ -68,14 +71,16 @@ const AuthenticationPage = () => {
           Create Room
         </Button>
       </div>
-      <Modal show={openModal} position="center" size="sm" onClose={() => setOpenModal(false)}>
+      <Modal show={openModal} position="center" size="sm" onClose={() => setOpenModal(false)} initialFocus={playerNameInputRef}>
         <Modal.Header>{isCreateRoom ? 'Create room' : 'Join room'}</Modal.Header>
         <Modal.Body>
           <div>
+            {!strIsNullOrWhitespace(roomCode) && (<h2 className="text-xl mb-2">Room: {roomCode}</h2>)}
             <div className="mb-2 block">
               <Label htmlFor="text" value="Player name" />
             </div>
             <TextInput
+              ref={playerNameInputRef}
               placeholder="Player name"
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
