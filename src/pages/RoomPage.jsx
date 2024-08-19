@@ -89,12 +89,12 @@ const RoomPage = () => {
 
   const getSelectedCards = () => {
     // TODO : random card index.
-    return roomInfo.cards[roomInfo.gameRound].filter((card) => card.statusId == 1 || card.statusId == 2);
+    return roomInfo.cards[roomInfo.gameRound].filter((card) => card.statusId === 1 || card.statusId === 2);
   };
 
   const getUnselectedCards = () => {
     // TODO : random card index.
-    return roomInfo.cards[roomInfo.gameRound].filter((card) => card.statusId == 3);
+    return roomInfo.cards[roomInfo.gameRound].filter((card) => card.statusId === 3);
   };
 
   const handleStartGame = () => {
