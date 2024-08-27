@@ -13,6 +13,13 @@ const customTheme = {
       light: "border border-gray-300 bg-white hover:bg-gray-100 text-gray-900 shadow rounded-lg",
     },
   },
+  modal: {
+    header: {
+      close: {
+        base: "hidden",
+      },
+    },
+  }
 };
 
 function App() {
