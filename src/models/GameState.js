@@ -1,15 +1,15 @@
 
-const GameState = {
-    Waiting: 1,
-    Start: 2,
-    KillerTurn: 3,
-    ProtectorTurn: 4,
-    LeaveDyingMessageTime: 5,
-    LeaveFakeEvidenceTime: 6,
-    DiscussTime: 7,
-    VoteOutTime: 8,
-    VoteKillTime: 9,
-    GameOver: 10,
+class GameState {
+    static Waiting = 1;
+    static Start = 2;
+    static KillerTurn = 3;
+    static ProtectorTurn = 4;
+    static LeaveDyingMessageTime = 5;
+    static LeaveFakeEvidenceTime = 6;
+    static DiscussTime = 7;
+    static VoteOutTime = 8;
+    static VoteKillTime = 9;
+    static GameOver = 10;
 };
 
 export default GameState;

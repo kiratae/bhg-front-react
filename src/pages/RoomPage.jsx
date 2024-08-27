@@ -4,15 +4,9 @@ import { Button, Clipboard } from "flowbite-react";
 import hubConnection from "../scripts/myHub";
 import myAxios from '../scripts/myAxios';
 import PlayerStatus from "../models/PlayerStatus";
+import PlayerRole from "../models/PlayerRole";
 import DMGameAction from "../models/DMGameAction";
 import GameState from "../models/GameState";
-
-const roleName = {
-  0: "Unknown",
-  1: "Civilian",
-  2: "Killer",
-  3: "Jarvis",
-};
 
 const RoomPage = () => {
   const navigate = useNavigate();
@@ -24,6 +18,7 @@ const RoomPage = () => {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedCards, setSelectedCards] = useState([]);
   const [connection] = useState(hubConnection(roomId));
+  const [discussTime, setDiscussTime] = useState(0);
   const limitEvidenceCardSelect = 1;
   const limitFakeEvidenceCardSelect = 2;
 
@@ -74,6 +69,10 @@ const RoomPage = () => {
             updateRoomInfo(roomData);
           })
 
+          connection.on('RoomDiscussTime', (time) => {
+            setDiscussTime(time);
+          })
+
           if (userName)
             connection.send('SetUserName', userName);
         })
@@ -86,6 +85,12 @@ const RoomPage = () => {
       (player) => player.statusId === PlayerStatus.Alive && player.userName !== userName
     );
   };
+
+  const getKillers = () => {
+    return roomInfo.players.filter(
+      (player) => player.roleId === PlayerRole.Killer
+    );
+  }
 
   const getSelectedCards = () => {
     // TODO : random card index.
@@ -176,7 +181,7 @@ const RoomPage = () => {
       console.log(`Player ${userName} is picked evidence.`);
       myAxios.post(`/api/dm-game-control/${roomId}`,
         {
-          acionTypeId: userInfo.roleId === 2 ? DMGameAction.KillerChooseEvidences : DMGameAction.DeadChooseEvidence,
+          acionTypeId: userInfo.roleId === PlayerRole.Killer ? DMGameAction.KillerChooseEvidences : DMGameAction.DeadChooseEvidence,
           userName: userName,
           targetCardIds: selectedCards
         })
@@ -228,6 +233,37 @@ const RoomPage = () => {
         }
       }
     });
+  };
+
+  const getDiscussTimeText = (time) => {
+    const m = Math.floor(time / 60);
+    const s = time % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  }
+
+  const handleConfirmVote = () => {
+    if (selectedPlayer) {
+      console.log(`Player ${selectedPlayer.userName} has been vote.`);
+      myAxios.post(`/api/dm-game-control/${roomId}`,
+        {
+          acionTypeId: DMGameAction.VoteKillerOut,
+          userName: userName,
+          targetUserName: selectedPlayer.userName
+        })
+        .then((response) => {
+          if (response.data && response.data.data) {
+            const roomData = response.data.data;
+            updateRoomInfo(roomData);
+            setSelectedPlayer(null);
+          }
+        }).catch((error) => {
+          if (error.response.status === 404) {
+            navigate('/');
+          } else {
+            console.error(error);
+          }
+        });
+    }
   };
 
   useEffect(() => {
@@ -290,14 +326,15 @@ const RoomPage = () => {
       {isRoomReady() && roomInfo.gameStateId === GameState.ProtectorTurn && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
-            You're <b>{roleName[userInfo.userRole]}</b>
+            You're <b>{PlayerRole.getRoleName(userInfo.roleId)}</b>
           </h3>
-          {userInfo.userRole !== 3 && (
+          <div className="my-3">Round: {roomInfo.gameRound}</div>
+          {userInfo.roleId !== PlayerRole.DogJarvis && (
             <div className="flex flex-col items-center justify-center w-full space-y-4">
               <h2 className="text-lg">Waiting for Protector Turn</h2>
             </div>
           )}
-          {userInfo.userRole === 3 && userInfo.userStatus === 1 && (
+          {userInfo.roleId === PlayerRole.DogJarvis && userInfo.statusId === PlayerStatus.Alive && (
             <div className="flex flex-col items-center justify-center w-full space-y-4">
               <h2 className="text-lg">
                 <b>Choose Player to Protect</b>
@@ -305,20 +342,19 @@ const RoomPage = () => {
               {getAlivePlayers().map((player, index) => (
                 <Button
                   key={index}
-                  className={`w-1/3 ${selectedPlayer?.username === player.username
-                    ? "border-blue-500 text-blue-500"
-                    : "border-grey-500 text-grey-500"
+                  color="light"
+                  className={`w-1/3 ${selectedPlayer?.userName === player.userName
+                    ? "border-emerald-800 font-bold border-2"
+                    : ""
                     }`}
                   onClick={() => handlePlayerClick(player)}
                 >
-                  {player.username}
+                  {selectedPlayer?.userName === player.userName ? '🛡️ ' : ''}{player.userName}
                 </Button>
               ))}
               <Button
-                className={`w-1/3 mt-4 ${selectedPlayer
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-500 text-white"
-                  }`}
+                color="primary"
+                className="w-1/3 mt-4"
                 onClick={handleConfirmProtect}
                 disabled={!selectedPlayer}
               >
@@ -333,14 +369,15 @@ const RoomPage = () => {
       {isRoomReady() && roomInfo.gameStateId === GameState.KillerTurn && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
-            You're <b>{roleName[userInfo.roleId]}</b>
+            You're <b>{PlayerRole.getRoleName(userInfo.roleId)}</b>
           </h3>
-          {userInfo.roleId !== 2 && (
+          <div className="my-3">Round: {roomInfo.gameRound}</div>
+          {userInfo.roleId !== PlayerRole.Killer && (
             <div className="flex flex-col items-center justify-center w-full space-y-4">
               <h2 className="text-lg">Waiting for Killer Player</h2>
             </div>
           )}
-          {userInfo.roleId === 2 && userInfo.statusId === 1 && (
+          {userInfo.roleId === PlayerRole.Killer && userInfo.statusId === 1 && (
             <div className="flex flex-col items-center justify-center w-full space-y-4">
               <h2 className="text-lg">
                 <b>Choose Player to Kill</b>
@@ -375,8 +412,9 @@ const RoomPage = () => {
       {isRoomReady() && roomInfo.gameStateId === GameState.LeaveDyingMessageTime && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
-            You're <b>{roleName[userInfo.roleId]}</b>
+            You're <b>{PlayerRole.getRoleName(userInfo.roleId)}</b>
           </h3>
+          <div className="my-3">Round: {roomInfo.gameRound}</div>
           {userInfo.statusId !== PlayerStatus.Dying && (
             <div className="flex flex-col items-center justify-center w-full space-y-4">
               <h2 className="text-lg">Waiting for Evidence</h2>
@@ -386,6 +424,9 @@ const RoomPage = () => {
             <div className="flex flex-col items-center justify-center w-full space-y-4">
               <h3 className="text-lg">
                 You're <b>Die!</b>
+              </h3>
+              <h3 className="text-lg">
+                Kiler is <b>{getKillers().map(x => x.userName).join(', ')}</b>
               </h3>
               <h2 className="text-lg">
                 <b>Choose the Evidence</b>
@@ -428,17 +469,18 @@ const RoomPage = () => {
       {isRoomReady() && roomInfo.gameStateId === GameState.LeaveFakeEvidenceTime && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
-            You're <b>{roleName[userInfo.roleId]}</b>
+            You're <b>{PlayerRole.getRoleName(userInfo.roleId)}</b>
           </h3>
+          <div className="my-3">Round: {roomInfo.gameRound}</div>
 
-          {userInfo.roleId !== 2 && (
+          {userInfo.roleId !== PlayerRole.Killer && (
             <div className="flex flex-col items-center justify-center w-full space-y-4">
               <h2 className="text-lg">
                 Waiting for Killer Choose Fake Evidence
               </h2>
             </div>
           )}
-          {userInfo.roleId === 2 && (
+          {userInfo.roleId === PlayerRole.Killer && (
             <div className="flex flex-col items-center justify-center w-full space-y-4">
               <h2 className="text-lg">
                 <b>Choose Two Fake Evidence</b>
@@ -500,15 +542,16 @@ const RoomPage = () => {
         </div>
       )}
 
+      {/* DiscussTime */}
       {isRoomReady() && roomInfo.gameStateId === GameState.DiscussTime && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
-            You're <b>{roleName[userInfo.userRole]}</b>
+            You're <b>{PlayerRole.getRoleName(userInfo.roleId)}</b>
           </h3>
+          <div className="my-3">Round: {roomInfo.gameRound}</div>
 
           <div className="flex flex-col items-center justify-center w-full space-y-4">
-            <h2 className="text-lg">Discuss Time</h2>
-            <div class="my-3">Round: {roomInfo.gameRound}</div>
+            <h2 className="text-lg">Discuss Time: {getDiscussTimeText(discussTime)}</h2>
             <div className="grid grid-cols-3 gap-4">
               {getSelectedCards().map((card) => (
                 <div
@@ -525,7 +568,7 @@ const RoomPage = () => {
                 </div>
               ))}
             </div>
-            <div class="my-3">Not selected cards</div>
+            <div className="my-3">Not selected cards</div>
             <div className="grid grid-cols-3 gap-4">
               {getUnselectedCards().map((card) => (
                 <div
@@ -542,7 +585,20 @@ const RoomPage = () => {
                 </div>
               ))}
             </div>
-            {userInfo.userStatus === 1 && (
+          </div>
+        </div>
+      )}
+
+      {/* VoteOutTime */}
+      {isRoomReady() && roomInfo.gameStateId === GameState.VoteOutTime && (
+        <div className="flex flex-col items-center justify-center w-full space-y-4">
+          <h3 className="text-lg">
+            You're <b>{PlayerRole.getRoleName(userInfo.roleId)}</b>
+          </h3>
+
+          <div className="flex flex-col items-center justify-center w-full space-y-4">
+            <div className="my-3">Round: {roomInfo.gameRound}</div>
+            {userInfo.statusId === PlayerStatus.Alive && (
               <div className="flex flex-col items-center justify-center w-full space-y-4">
                 <h2 className="text-lg">
                   <b>Choose Player to Vote</b>
@@ -550,21 +606,20 @@ const RoomPage = () => {
                 {getAlivePlayers().map((player, index) => (
                   <Button
                     key={index}
+                    color="light"
                     className={`w-1/3 ${selectedPlayer?.userName === player.userName
-                      ? "border-blue-500 text-blue-500"
-                      : "border-grey-500 text-grey-500"
+                      ? "border-amber-500 font-bold border-2"
+                      : ""
                       }`}
                     onClick={() => handlePlayerClick(player)}
                   >
-                    {player.userName}
+                    {selectedPlayer?.userName === player.userName ? '🎯 ' : ''}{player.userName}
                   </Button>
                 ))}
                 <Button
-                  className={`w-1/3 mt-4 ${selectedPlayer
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-500 text-white"
-                    }`}
-                  onClick={handleConfirmKill}
+                  color="primary"
+                  className="w-1/3 mt-4"
+                  onClick={handleConfirmVote}
                   disabled={!selectedPlayer}
                 >
                   Vote Player
@@ -575,10 +630,10 @@ const RoomPage = () => {
         </div>
       )}
 
-      {isRoomReady() && roomInfo.gameStateId === GameState.VoteOutTime && (
+      {isRoomReady() && roomInfo.gameStateId === GameState.VoteKillTime && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <h3 className="text-lg">
-            You're <b>{roleName[userInfo.userRole]}</b>
+            You're <b>{PlayerRole.getRoleName(userInfo.roleId)}</b>
           </h3>
 
           {userInfo.userStatus !== 3 && (
