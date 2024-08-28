@@ -448,47 +448,49 @@ const RoomPage = () => {
             </div>
           )}
           {userInfo.statusId === PlayerStatus.Dying && (
-            <div className="flex flex-col items-center justify-center w-full space-y-4">
-              <h3 className="text-lg">
-                You're <b>Die!</b>
-              </h3>
-              <h3 className="text-lg">
-                Killer is <b className="text-red-600">{getKillers().map(x => x.userName).join(', ')}</b>
-              </h3>
-              <h2 className="text-lg">
-                <b>Choose the Evidence</b>
-              </h2>
-              <div className="grid grid-cols-3 gap-4">
-                {roomInfo.cards[roomInfo.gameRound].map((card) => (
-                  <div
-                    key={card.cardId}
-                    className={`cursor-pointer rounded-xl ${selectedCards.includes(card.cardId)
-                      ? "border-red-500 border-4"
-                      : "border-gray-300 border-4"
-                      }`} // Conditional border width
-                    onClick={() => handleEvidenceCardClick(card.cardId)}
-                  >
-                    <img
-                      src={`${process.env.REACT_APP_API_END_POINT}${card.fileName.replace('~/', '/')}`}
-                      alt={`Card ${card.cardId}`}
-                      className="w-full h-full object-cover rounded-lg"
-                      style={{ width: "100px", height: "150px" }} // Image size
-                    />
-                  </div>
-                ))}
+            <>
+              <div className="flex flex-col items-center justify-center w-full space-y-4">
+                <h3 className="text-lg">
+                  You're <b>Die!</b>
+                </h3>
+                <h3 className="text-lg">
+                  Killer is <b className="text-red-600">{getKillers().map(x => x.userName).join(', ')}</b>
+                </h3>
+                <h2 className="text-lg">
+                  <b>Choose the Evidence</b>
+                </h2>
+                <div className="grid grid-cols-3 gap-4">
+                  {roomInfo.cards[roomInfo.gameRound].map((card) => (
+                    <div
+                      key={card.cardId}
+                      className={`cursor-pointer rounded-xl ${selectedCards.includes(card.cardId)
+                        ? "border-red-500 border-4"
+                        : "border-gray-300 border-4"
+                        }`} // Conditional border width
+                      onClick={() => handleEvidenceCardClick(card.cardId)}
+                    >
+                      <img
+                        src={`${process.env.REACT_APP_API_END_POINT}${card.fileName.replace('~/', '/')}`}
+                        alt={`Card ${card.cardId}`}
+                        className="w-full h-full object-cover rounded-lg"
+                        style={{ width: "100px", height: "150px" }} // Image size
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
 
-          <Button
-            color="primary"
-            className="w-1/3 mt-4"
-            onClick={handleConfirmChooseEvidence}
-            isProcessing={isLoading}
-            disabled={selectedCards.length === 0}
-          >
-            Confirm
-          </Button>
+              <Button
+                color="primary"
+                className="w-1/3 mt-4"
+                onClick={handleConfirmChooseEvidence}
+                isProcessing={isLoading}
+                disabled={selectedCards.length === 0}
+              >
+                Confirm
+              </Button>
+            </>
+          )}
         </div>
       )}
 
@@ -576,7 +578,7 @@ const RoomPage = () => {
           </div>
 
           {userInfo.statusId === PlayerStatus.Alive && (
-            <div className="flex flex-col items-center justify-center w-full space-y-4">
+            <div className="flex flex-col items-center justify-center w-full space-y-4 mb-4">
               <h2 className="text-lg">
                 <b>Choose Player to Vote</b>
               </h2>
