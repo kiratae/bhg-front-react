@@ -12,10 +12,12 @@ const AuthenticationPage = () => {
   const [roomCode, setRoomCode] = React.useState(roomId != null ? roomId : '');
   const [openModal, setOpenModal] = React.useState(roomId != null);
   const [isCreateRoom, setIsCreateRoom] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
   const playerNameInputRef = React.useRef(null);
 
   const handleCreateRoom = () => {
     // Logic for creating a room can be added here
+    setIsLoading(true);
     myAxios.post('/api/rooms', { userName: playerName })
       .then((response) => {
         if (response.data && response.data.data) {
@@ -26,6 +28,7 @@ const AuthenticationPage = () => {
   };
 
   const handleJoinRoom = () => {
+    setIsLoading(true);
     myAxios.post(`/api/rooms/${roomCode}/join`, { userName: playerName })
       .then((response) => {
         if (response.data && response.data.data) {
@@ -92,7 +95,7 @@ const AuthenticationPage = () => {
           <Button color="light" onClick={() => setOpenModal(false)}>
             Cancel
           </Button>
-          <Button color={isCreateRoom ? 'secondary' : 'primary'} onClick={onConfirmModal} disabled={strIsNullOrWhitespace(playerName)}>{isCreateRoom ? 'Create room' : 'Join room'}</Button>
+          <Button color={isCreateRoom ? 'secondary' : 'primary'} onClick={onConfirmModal} isProcessing={isLoading} disabled={strIsNullOrWhitespace(playerName)}>{isCreateRoom ? 'Create room' : 'Join room'}</Button>
         </Modal.Footer>
       </Modal>
     </>

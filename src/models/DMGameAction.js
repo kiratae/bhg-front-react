@@ -23,11 +23,9 @@ class DMGameAction {
     /**
      * All players vote out for suspects.
      */
-    static VoteKillerOut = 6;
-    /**
-     * All players vote to confirm kill suspect.
-     */
-    static VoteConfirmKill = 7
+    static VoteHanging = 6;
+    
+    static BackToLobby = 7;
 };
 
 export default DMGameAction;

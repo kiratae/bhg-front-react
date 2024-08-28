@@ -7,9 +7,9 @@ class GameState {
     static LeaveDyingMessageTime = 5;
     static LeaveFakeEvidenceTime = 6;
     static DiscussTime = 7;
-    static VoteOutTime = 8;
-    static VoteKillTime = 9;
-    static GameOver = 10;
+    static VoteHanging = 8;
+    static GameOverCivilianWin = 9;
+    static GameOverKillerWin = 10;
 };
 
 export default GameState;

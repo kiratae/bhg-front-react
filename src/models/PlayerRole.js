@@ -1,9 +1,10 @@
 
 const roleNames = {
     0: "Unknown",
-    1: "Civilian",
-    2: "Killer",
-    3: "Jarvis",
+    1: "Civilian 🙍‍♂️",
+    2: "Killer 🥷",
+    3: "Jarvis The Husky 🐶",
+    4: "Private Detective 🕵️",
   };
 
 class PlayerRole {
@@ -11,6 +12,7 @@ class PlayerRole {
     static Civilian = 1;
     static Killer = 2;
     static DogJarvis = 3; // Guard
+    static Detective = 4; // Guard
 
     static getRoleName = (roleId) => roleNames[roleId];
 }
