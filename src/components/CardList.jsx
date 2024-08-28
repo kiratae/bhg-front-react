@@ -18,7 +18,7 @@ const CardList = (props) => {
     return (
         <>
             {getGameCards().map(({ round, cards }) => (
-                <>
+                <div key={round}>
                     <div className="my-1">Phase: {round}</div>
                     <div className="grid grid-cols-3 gap-4">
                         {cards.map((card) => (
@@ -35,7 +35,7 @@ const CardList = (props) => {
                             </div>
                         ))}
                     </div>
-                </>
+                </div>
             ))}
             <div className="my-1">Not selectd cards</div>
             <div className="grid grid-cols-3 gap-4">
