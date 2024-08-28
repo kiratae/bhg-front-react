@@ -19,7 +19,7 @@ const CardList = (props) => {
         <>
             {getGameCards().map(({ round, cards }) => (
                 <>
-                    <div className="my-2">Phase: {round}</div>
+                    <div className="my-1">Phase: {round}</div>
                     <div className="grid grid-cols-3 gap-4">
                         {cards.map((card) => (
                             <div
@@ -30,14 +30,14 @@ const CardList = (props) => {
                                     src={`${process.env.REACT_APP_API_END_POINT}${card.fileName.replace('~/', '/')}`}
                                     alt={`Card ${card.cardId}`}
                                     className="w-full h-full object-cover rounded-lg"
-                                    style={{ width: "80px", height: "120px" }}
+                                    style={{ width: "100px", height: "150px" }} // Image size
                                 />
                             </div>
                         ))}
                     </div>
                 </>
             ))}
-            <div className="my-2">Not selectd cards</div>
+            <div className="my-1">Not selectd cards</div>
             <div className="grid grid-cols-3 gap-4">
                 {getUnselectedCards(room.gameRound).map((card) => (
                     <div
@@ -48,7 +48,7 @@ const CardList = (props) => {
                             src={`${process.env.REACT_APP_API_END_POINT}${card.fileName.replace('~/', '/')}`}
                             alt={`Card ${card.cardId}`}
                             className="w-full h-full object-cover rounded-lg"
-                            style={{ width: "60px", height: "90px" }}
+                            style={{ width: "80px", height: "120px" }}
                         />
                     </div>
                 ))}

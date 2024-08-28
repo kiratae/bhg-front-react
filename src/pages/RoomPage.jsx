@@ -567,59 +567,59 @@ const RoomPage = () => {
       )}
 
       {/* DiscussTime */}
-      {isRoomReady() && roomInfo.gameStateId === GameState.DiscussTime && (
+      {isRoomReady() && (roomInfo.gameStateId === GameState.DiscussTime || roomInfo.gameStateId === GameState.VoteHanging) && (
         <div className="flex flex-col items-center justify-center w-full space-y-4">
           <PlayerInfo user={userInfo}></PlayerInfo>
-          <div className="my-3">Round: {roomInfo.gameRound}</div>
-
           <div className="flex flex-col items-center justify-center w-full space-y-4">
             <h2 className="text-lg">Discuss Time: {getDiscussTimeText(discussTime)}</h2>
             <CardList room={roomInfo}></CardList>
           </div>
+
+          {userInfo.statusId === PlayerStatus.Alive && (
+            <div className="flex flex-col items-center justify-center w-full space-y-4">
+              <h2 className="text-lg">
+                <b>Choose Player to Vote</b>
+              </h2>
+              {getAlivePlayers().map((player, index) => (
+                <Button
+                  key={player.userName}
+                  color="light"
+                  className={`w-1/3 ${selectedPlayer?.userName === player.userName
+                    ? "border-amber-500 font-bold border-2"
+                    : ""
+                    }`}
+                  disabled={isVoted()}
+                  onClick={() => handlePlayerClick(player)}
+                >
+                  {selectedPlayer?.userName === player.userName ? '🎯 ' : ''}{player.userName}
+                </Button>
+              ))}
+              {!isVoted() && (
+                <Button
+                  color="primary"
+                  className="w-1/3 mt-4"
+                  isProcessing={isLoading}
+                  onClick={handleConfirmVote}
+                  disabled={!selectedPlayer}
+                >
+                  Vote Player
+                </Button>)}
+            </div>
+          )}
         </div>
       )}
 
       {/* VoteHanging */}
-      {isRoomReady() && roomInfo.gameStateId === GameState.VoteHanging && (
-        <div className="flex flex-col items-center justify-center w-full space-y-4">
-          <PlayerInfo user={userInfo}></PlayerInfo>
+      {/* {isRoomReady() && roomInfo.gameStateId === GameState.VoteHanging && (
+        // <div className="flex flex-col items-center justify-center w-full space-y-4">
+        //   <PlayerInfo user={userInfo}></PlayerInfo>
 
-          <div className="flex flex-col items-center justify-center w-full space-y-4">
-            <div className="my-3">Round: {roomInfo.gameRound}</div>
-            {userInfo.statusId === PlayerStatus.Alive && (
-              <div className="flex flex-col items-center justify-center w-full space-y-4">
-                <h2 className="text-lg">
-                  <b>Choose Player to Vote</b>
-                </h2>
-                {getAlivePlayers().map((player, index) => (
-                  <Button
-                    key={index}
-                    color="light"
-                    className={`w-1/3 ${selectedPlayer?.userName === player.userName
-                      ? "border-amber-500 font-bold border-2"
-                      : ""
-                      }`}
-                    disabled={isVoted()}
-                    onClick={() => handlePlayerClick(player)}
-                  >
-                    {selectedPlayer?.userName === player.userName ? '🎯 ' : ''}{player.userName}
-                  </Button>
-                ))}
-                {!isVoted() && (
-                  <Button
-                    color="primary"
-                    className="w-1/3 mt-4"
-                    isProcessing={isLoading}
-                    onClick={handleConfirmVote}
-                    disabled={!selectedPlayer}
-                  >
-                    Vote Player
-                  </Button>)}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+        //   <div className="flex flex-col items-center justify-center w-full space-y-4">
+        //     <div className="my-3">Round: {roomInfo.gameRound}</div>
+
+        //   </div>
+        // </div>
+      )} */}
 
       {isRoomReady() && (roomInfo.gameStateId === GameState.GameOverCivilianWin || roomInfo.gameStateId === GameState.GameOverKillerWin) && (
         <>
@@ -632,7 +632,7 @@ const RoomPage = () => {
           <div className="flex flex-col items-center justify-center w-full space-y-4">
             <h3 className="text-lg">Players:</h3>
             {roomInfo.players.map((player, index) => (
-              <div key={index} className={`text-center ${player.userName === userName ? 'font-bold' : ''}`}>
+              <div key={player.userName} className={`text-center ${player.userName === userName ? 'font-bold' : ''}`}>
                 {player.isHost ? '👑 ' : '🟢 '}{player.userName}{" is "}{PlayerRole.getRoleName(player.roleId)}
               </div>
             ))}
