@@ -62,7 +62,7 @@ const RoomPage = () => {
           console.log('Connected!');
 
           connection.on('RoomSend', message => {
-            console.log(message);
+            // console.log(message);
           });
 
           connection.on('RoomDataSend', (roomData) => {
@@ -71,7 +71,7 @@ const RoomPage = () => {
           });
 
           connection.on('RoomJoined', (roomData) => {
-            console.log('RoomJoined', { roomData });
+            // console.log('RoomJoined', { roomData });
             updateRoomInfo(roomData);
           })
 
