@@ -125,7 +125,7 @@ const RoomPage = () => {
     setIsLoading(true);
     myAxios.post(`/api/dm-game-control/${roomId}`,
       {
-        acionTypeId: DMGameAction.StartGame,
+        acionTypeId: DMGameAction.BackToLobby,
         userName: userName
       })
       .then((response) => {
@@ -326,7 +326,7 @@ const RoomPage = () => {
           ))}
           {userInfo.isHost && (
             <>
-              <Button color="light" className="w-1/3" isProcessing={isLoading}>
+              <Button color="light" className="w-1/3" disabled>
                 Setup
               </Button>
               <Button color="primary" className="w-1/3" onClick={handleStartGame} isProcessing={isLoading}>
@@ -633,7 +633,7 @@ const RoomPage = () => {
             <h3 className="text-lg">Players:</h3>
             {roomInfo.players.map((player, index) => (
               <div key={index} className={`text-center ${player.userName === userName ? 'font-bold' : ''}`}>
-                {player.isHost ? '👑 ' : '🟢 '}{player.userName}{" "}{PlayerRole.getRoleName(player.roleId)}
+                {player.isHost ? '👑 ' : '🟢 '}{player.userName}{" is "}{PlayerRole.getRoleName(player.roleId)}
               </div>
             ))}
             {userInfo.isHost && (
