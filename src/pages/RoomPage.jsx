@@ -306,7 +306,7 @@ const RoomPage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen space-y-4">
+    <div className="flex flex-col items-center justify-center space-y-4">
       <h1 className="text-2xl font-bold">Dying Message</h1>
       <div className="flex justify-center items-center space-x-2">
         <h2 className="text-xl">Room: {roomId}</h2>
