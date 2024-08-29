@@ -47,7 +47,7 @@ const RoomPage = () => {
   const [userInfo, setUserInfo] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedCards, setSelectedCards] = useState([]);
-  const [connection] = useState(hubConnection(roomId));
+  const [connection] = useState(userName === null ? null : hubConnection(roomId));
   // const [discussTime, setDiscussTime] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const limitEvidenceCardSelect = 1;
@@ -79,7 +79,7 @@ const RoomPage = () => {
 
   useEffect(() => {
     if (!userName)
-      navigate('/', { state: { roomId: roomId } });
+      navigate(`/join/${roomId}`);
   }, [roomId, userName, navigate]);
 
   useEffect(() => {
@@ -350,7 +350,7 @@ const RoomPage = () => {
         <div className="flex justify-center items-center space-x-2">
           <h2 className="text-xl">Room: {roomId}</h2>
           {isRoomReady() && roomInfo.gameStateId === GameState.Waiting && (
-            <Clipboard valueToCopy={window.location.href} label="Copy" />
+            <Clipboard valueToCopy={window.location.href.replace('/room', '/join')} label="Copy" />
           )}
         </div>
 

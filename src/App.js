@@ -28,6 +28,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<AuthenticationPage />} />
+          <Route path="/join/:roomId" element={<AuthenticationPage />} />
           <Route path="/room/:roomId" element={<RoomPage />} />
         </Routes>
       </Router>
