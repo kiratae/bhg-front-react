@@ -1,13 +1,12 @@
 import React from 'react';
 import { Button, TextInput, Label, Modal } from 'flowbite-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import myAxios from '../scripts/myAxios';
 import { strIsNullOrWhitespace } from '../scripts/utils';
 
 const AuthenticationPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const roomId = location?.state?.roomId || null;
+  const { roomId } = useParams();
   const [playerName, setPlayerName] = React.useState('');
   const [roomCode, setRoomCode] = React.useState(roomId != null ? roomId : '');
   const [openModal, setOpenModal] = React.useState(roomId != null);
