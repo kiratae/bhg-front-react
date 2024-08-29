@@ -27,7 +27,7 @@ const CardList = (props) => {
                                 className="rounded-xl border-grey-300 border-4"
                             >
                                 <img
-                                    src={`${process.env.REACT_APP_API_END_POINT}${card.fileName.replace('~/', '/')}`}
+                                    src={card.fileName}
                                     alt={`Card ${card.cardId}`}
                                     className="w-full h-full object-cover rounded-lg"
                                     style={{ width: "100px", height: "150px" }} // Image size
@@ -45,7 +45,7 @@ const CardList = (props) => {
                         className="rounded-xl border-grey-300 border-2"
                     >
                         <img
-                            src={`${process.env.REACT_APP_API_END_POINT}${card.fileName.replace('~/', '/')}`}
+                            src={card.fileName}
                             alt={`Card ${card.cardId}`}
                             className="w-full h-full object-cover rounded-lg"
                             style={{ width: "80px", height: "120px" }}
