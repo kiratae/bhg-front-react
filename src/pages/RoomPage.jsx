@@ -111,9 +111,9 @@ const RoomPage = () => {
             notify(`Player "${deadPlayer}" is dead!`, <DeadNotiIcon />);
           })
 
-          connection.on('RoomSendPlayerVote', (votePlayer) => {
+          connection.on('RoomSendPlayerVote', (votePlayer, voted, maxPlayer) => {
             // setDiscussTime(time);< />
-            notify(`Player "${votePlayer}" has been voted!`, <VoteNotiIcon />);
+            notify(`Player "${votePlayer}" has voted! [${voted}/${maxPlayer}]`, <VoteNotiIcon />);
           })
 
           if (userName)
@@ -509,7 +509,7 @@ const RoomPage = () => {
                         onClick={() => handleEvidenceCardClick(card.cardId)}
                       >
                         <img
-                          src={`${process.env.REACT_APP_API_END_POINT}${card.fileName.replace('~/', '/')}`}
+                          src={card.fileName}
                           alt={`Card ${card.cardId}`}
                           className="w-full h-full object-cover rounded-lg"
                           style={{ width: "100px", height: "150px" }} // Image size
@@ -560,7 +560,7 @@ const RoomPage = () => {
                           className="rounded-xl border-green-500 border-4 cursor-not-allowed"
                         >
                           <img
-                            src={`${process.env.REACT_APP_API_END_POINT}${card.fileName.replace('~/', '/')}`}
+                            src={card.fileName}
                             alt={`Card ${card.cardId}`}
                             className="w-full h-full object-cover rounded-lg"
                             style={{ width: "100px", height: "150px" }} // Image size
@@ -581,7 +581,7 @@ const RoomPage = () => {
                           }}
                         >
                           <img
-                            src={`${process.env.REACT_APP_API_END_POINT}${card.fileName.replace('~/', '/')}`}
+                            src={card.fileName}
                             alt={`Card ${card.cardId}`}
                             className="w-full h-full object-cover rounded-lg"
                             style={{ width: "100px", height: "150px" }} // Image size
